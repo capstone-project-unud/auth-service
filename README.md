@@ -36,3 +36,5 @@ go test ./...
 ```
 
 Alamat lokal menggunakan port 8081. Pada lingkungan HTTPS, `COOKIE_SECURE` ditetapkan menjadi `true`. Berkas `.env` dan hasil kompilasi tidak disertakan dalam repositori.
+
+Pengembangan di dalam Docker menggunakan `Dockerfile.dev` dan konfigurasi `.air.toml`. Air v1.67.4 memantau source serta `go.mod`/`go.sum`, kemudian mengompilasi dan menjalankan ulang layanan saat berkas berubah. Konfigurasi dijalankan melalui gabungan `compose.yaml` dan `compose.dev.yaml` pada repositori infrastructure.
