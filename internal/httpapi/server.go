@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"capstone/auth-service/internal/accesslog"
 	"capstone/auth-service/internal/config"
 	"capstone/auth-service/internal/store"
 	"github.com/gofiber/fiber/v3"
@@ -53,6 +54,7 @@ func New(cfg config.Config, db store.Store) *fiber.App {
 		}
 		return c.Status(code).JSON(fiber.Map{"error": fiber.Map{"message": message}})
 	}})
+	app.Use(accesslog.New("auth-service"))
 	app.Use(recover.New())
 	app.Use(func(c fiber.Ctx) error {
 		ctx, cancel := context.WithTimeout(c.Context(), 12*time.Second)
