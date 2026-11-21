@@ -142,13 +142,21 @@ func (s *Server) user(ctx context.Context, path string) (User, int, error) {
 }
 func (s *Server) login(c fiber.Ctx) error {
 	var in struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Identifier string `json:"identifier"`
+		Email      string `json:"email"`
+		Password   string `json:"password"`
 	}
-	if c.Bind().JSON(&in) != nil || len(in.Email) > 254 || len(in.Password) > 72 || in.Password == "" {
-		return fiber.NewError(422, "Email dan kata sandi wajib diisi dengan benar.")
+	if c.Bind().JSON(&in) != nil || len(in.Password) > 72 || in.Password == "" {
+		return fiber.NewError(422, "Email, NIM, NIP, atau NIDN serta kata sandi wajib diisi.")
 	}
-	u, status, err := s.user(c.Context(), "/internal/users/by-email?email="+url.QueryEscape(strings.ToLower(strings.TrimSpace(in.Email))))
+	loginID := strings.TrimSpace(in.Identifier)
+	if loginID == "" {
+		loginID = strings.TrimSpace(in.Email)
+	}
+	if loginID == "" || len(loginID) > 254 {
+		return fiber.NewError(422, "Email, NIM, NIP, atau NIDN serta kata sandi wajib diisi dengan benar.")
+	}
+	u, status, err := s.user(c.Context(), "/internal/users/by-identifier?q="+url.QueryEscape(loginID))
 	if err != nil || (status != 200 && status != 404) {
 		return fiber.NewError(503, "Layanan pengguna belum tersedia. Silakan coba kembali.")
 	}
@@ -166,7 +174,7 @@ func (s *Server) login(c fiber.Ctx) error {
 	}
 	valid := bcrypt.CompareHashAndPassword(hash, []byte(in.Password)) == nil
 	if status != 200 || !u.IsActive || !credentialFound || !valid {
-		return fiber.NewError(401, "Email atau kata sandi salah, atau akun tidak aktif.")
+		return fiber.NewError(401, "Email/NIM/NIP/NIDN atau kata sandi salah, atau akun tidak aktif.")
 	}
 	raw := make([]byte, 32)
 	if _, err = rand.Read(raw); err != nil {
