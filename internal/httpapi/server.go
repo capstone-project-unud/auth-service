@@ -43,7 +43,8 @@ type User struct {
 
 func New(cfg config.Config, db store.Store) *fiber.App {
 	dummy, _ := bcrypt.GenerateFromPassword([]byte("invalid-placeholder-password"), 12)
-	s := &Server{Config: cfg, Store: db, Client: &http.Client{Timeout: 5 * time.Second}, dummyHash: dummy}
+	transport := &http.Transport{MaxIdleConns: 100, MaxIdleConnsPerHost: 32, IdleConnTimeout: 90 * time.Second}
+	s := &Server{Config: cfg, Store: db, Client: &http.Client{Timeout: 5 * time.Second, Transport: transport}, dummyHash: dummy}
 	app := fiber.New(fiber.Config{AppName: "capstone-auth", BodyLimit: 16 * 1024, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, ErrorHandler: func(c fiber.Ctx, e error) error {
 		code := 500
 		message := "Layanan autentikasi mengalami gangguan."
